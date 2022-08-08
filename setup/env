@@ -1,0 +1,18 @@
+USER_AGENT=cvweiss-base
+
+PORT=3002
+
+websocket = false
+websocket_port = 18888;
+
+MONGO_LOAD=false
+MONGO_URL=mongodb://localhost:27017?maxPoolSize=500
+MONGO_DB_NAME=DB_NAME
+
+MYSQL_LOAD=false
+MYSQL_HOST=localhost
+MYSQL_USER=mysql
+MYSQL_PASSWORD=mysql
+MYSQL_DB=mysql
+
+REDIS_LOAD=false

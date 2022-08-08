@@ -1,0 +1,15 @@
+# Update as necessary for your configuration
+[Unit]
+Description=example-www
+
+[Service]
+ExecStart=/usr/bin/node ./bin/www.js
+Restart=always
+User=www
+Group=www
+Environment=PATH=/usr/bin:/usr/local/bin
+EnvironmentFile=/home/example.com/.env
+WorkingDirectory=/home/example.com
+
+[Install]
+WantedBy=multi-user.target

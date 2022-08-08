@@ -1,0 +1,27 @@
+Required
+
+node		# for running the app of course
+npm		# for library installs
+mysql 		# for fast text searching
+nginx		# for web access
+mongodb		# primary database
+redis		# for fast caching
+
+Run these as root for ufw filewall
+
+ufw 443
+ufw 18888
+ufw enable
+
+// Create a nginx self signed cert
+// copy over nginx configurations, edit as needed
+
+Run these as the www user (or whatever user you picked) in the app root
+
+cp setup/env .env  		# env file, edit as necessary
+npm upgrade			# Installs libraries
+
+// setup systemctl configurations
+systemctl daemon-reload
+systemctl enable example-www
+systemctl start example-www
