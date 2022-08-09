@@ -30,10 +30,10 @@ const touch_files = [
 	'www/public/css/app.css',
 ];
 const copy_files = {
-	'node_modules/cvweiss-base/setup/env': '.env',
-	'node_modules/cvweiss-base/setup/examples/cron/helloworld.js': 'cron/helloworld.js',
-	'node_modules/cvweiss-base/setup/examples/www/helloworld.js': 'www/controllers/helloworld.js',
-	'node_modules/cvweiss-base/setup/examples/www/helloworld.pug': 'www/views/helloworld.pug',
+	'node_modules/fundamen/setup/env': '.env',
+	'node_modules/fundamen/setup/examples/cron/helloworld.js': 'cron/helloworld.js',
+	'node_modules/fundamen/setup/examples/www/helloworld.js': 'www/controllers/helloworld.js',
+	'node_modules/fundamen/setup/examples/www/helloworld.pug': 'www/views/helloworld.pug',
 }
 
 function initApp() {
