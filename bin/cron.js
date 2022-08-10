@@ -2,18 +2,29 @@
 
 const fs = require('fs');
 
-let app = undefined;
-async function getApp() {
-    if (app === undefined) {
-        let req = require('./init.js');
-        app = await req();
+module.exports=init;
 
-        if (app.redis == undefined) {
-            console.error('REDIS_LOAD=true is required within your .env (or environment) for cronjobs');
-            process.exit(1);
-        }
+let initialized = false;
+function init(app) {
+    if (initialized == false) {
+        initialized = true;
+        clearRunKeys(app);
     }
-    return app;
+}
+
+async function clearRunKeys(app) {
+    let tasks = loadTasks(app);
+
+    await app.redis.del("STOP");
+    await app.redis.del("RESTART");
+
+    let runkeys = await app.redis.keys('crin:running*');
+    for (let i = 0; i < runkeys.length; i++) {
+        await app.redis.del(runkeys[i]);
+    }
+    setTimeout(function () {
+        runTasks(app, tasks);
+    }, 1);
 }
 
 function loadTasks(app) {
@@ -57,26 +68,6 @@ function createTaskSettings(params) {
         iterations: params.iterations || 0,
         offset: params.offset || 0
     };
-}
-
-// Clear existing running keys
-setTimeout(function () {
-    clearRunKeys();
-}, 1);
-async function clearRunKeys() {
-    let app = await getApp();
-    let tasks = loadTasks(app);
-
-    await app.redis.del("STOP");
-    await app.redis.del("RESTART");
-
-    let runkeys = await app.redis.keys('crin:running*');
-    for (let i = 0; i < runkeys.length; i++) {
-        await app.redis.del(runkeys[i]);
-    }
-    setTimeout(function () {
-        runTasks(app, tasks);
-    }, 1);
 }
 
 async function runTasks(app, tasks) {

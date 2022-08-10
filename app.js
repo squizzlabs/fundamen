@@ -1,18 +1,28 @@
 'use strict';
 
-module.exports = function (jobType) {
+module.exports = async function (jobType) {
+	let app;
 	switch(jobType) {
 		case 'www':
-			return require('./bin/www.js');
+			app = await require('./bin/init.js')();
+			require('./bin/www.js')(app);
+			return app;
 		case 'cron':
-			return require('./bin/cron.js');
-
-		case 'init':
-			initApp();
+			app = await require('./bin/init.js')();
+			require('./bin/cron.js')(app);
+			return app;
+		case 'prepare':
+			prepareApplication();
 			break;
+		case '?':
+		case 'help':
+		case '--h':
 		default:
 			console.error('Unknown job type', jobType);
-			console.error('Valid job types are www, cron, init'); 
+			console.error('Valid job types are www, cron, prepare'); 
+			console.error('   cron - Starts cron jobs, requires basepath to be defined, redis enabled, and a cron directory');
+			console.error('    www - Starts an express server, requires port to be defined')
+			console.error('prepare - Prepares the directory with the basics for cron and www with examples files')
 	}
 }
 
@@ -36,7 +46,7 @@ const copy_files = {
 	'node_modules/fundamen/setup/examples/www/helloworld.pug': 'www/views/helloworld.pug',
 }
 
-function initApp() {
+function prepareApplication() {
 	const fs = require('fs');
 	for (const dir of touch_directories) {
 		if (!fs.existsSync(dir)) {

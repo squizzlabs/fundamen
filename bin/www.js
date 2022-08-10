@@ -10,22 +10,20 @@ let watch = require('node-watch');
 let app = undefined;
 let server;
 
-async function getApp() {
-    if (app === undefined) {
-        let req = require('./init.js');
-        app = await req();
-    }
-    return app;
-}
-
 const server_started = Date.now();
 
-startWebListener();
+module.exports = init;
 
-async function startWebListener() {
+let initialized = false;
+function init(app) {
+    if (initialized == false) {
+        initialized = true;
+        startWebListener(app);
+    }
+}
+
+async function startWebListener(app) {
     let www = express();
-
-    www.app = await getApp();
 
     www.root = process.env.BASEPATH;
 
@@ -55,9 +53,10 @@ async function startWebListener() {
     www.disable('x-powered-by');
     www.use('/api/', require('cors')());
 
+    www.use('/', require('../www/routes.js'));
     www.use('/', express.static(process.env.BASEPATH + '/www/public'));
-    let indexRouter = require('../www/routes.js');
-    www.use('/', indexRouter);
+
+    app.express = www;
 
     server = http.createServer(www);
     server.listen(process.env.PORT);
