@@ -56,6 +56,7 @@ async function startWebListener(app) {
     www.use('/', require('../www/routes.js'));
     www.use('/', express.static(process.env.BASEPATH + '/www/public'));
 
+    www.app = app;
     app.express = www;
 
     server = http.createServer(www);
