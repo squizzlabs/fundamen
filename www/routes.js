@@ -46,18 +46,12 @@ function addControllers(file_path) {
 
 async function doStuff(req, res, next, controller) {
     const app = req.app.app;
-    let result = {};
     try {
         req.verify_query_params = verify_query_params;
 
-        result = wrap_promise(controller[req.method.toLowerCase()](req, res));
-
-        const now = app.now();
-        do {
-            await app.sleep(1);
-            // Allow up to 15 seconds for the request to finish, or redirect to the same URL to try again
-            if ((app.now() - now) > 15) return; // bailing
-        } while (result.isFinished() == false);
+        let result = wrap_promise(controller[req.method.toLowerCase()](req, res));
+        await Promise.race([result, app.sleep(15000)]); 
+        if (result.isFinished() == false) return; // timed out
         result = await result;
 
         if (result.content_type != undefined) res.setHeader("Content-Type", result.content_type);
@@ -85,7 +79,6 @@ async function doStuff(req, res, next, controller) {
     } catch (e) {
         console.log('error', e);
     } finally {
-        result = {}; // Clear it out for quicker GC
         next();
     }
 }
