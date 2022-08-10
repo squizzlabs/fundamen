@@ -49,10 +49,14 @@ async function doStuff(req, res, next, controller) {
     try {
         req.verify_query_params = verify_query_params;
 
-        let result = wrap_promise(controller[req.method.toLowerCase()](req, res));
-        await Promise.race([result, app.sleep(15000)]); 
-        if (result.isFinished() == false) return; // timed out
-        result = await result;
+        const promise = wrap_promise(controller[req.method.toLowerCase()](req, res));
+        const timeout = app.sleep(process.env.HTTP_TIMEOUT || 60000);
+
+        await Promise.race([promise, timeout]); 
+        if (promise.isFinished() == false) return res.sendStatus(408); // timed out
+        
+        clearTimeout(timeout);
+        const result = await result;
 
         if (result.content_type != undefined) res.setHeader("Content-Type", result.content_type);
         if (result.status_code != undefined) res.sendStatus(status_code);
