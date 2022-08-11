@@ -38,9 +38,11 @@ async function startWebListener(app) {
         for (const key of keys) {
             const value = process.env[key];
             env[key] = value;
+            console.log('Porting', key, value, 'for use by res');
         }
     }
-    
+
+    app.server_started = server_started;
     www.use((req, res, next) => {
         res.locals.server_started = server_started;
         res.locals.app = www.app;
@@ -53,8 +55,8 @@ async function startWebListener(app) {
     www.disable('x-powered-by');
     www.use('/api/', require('cors')());
 
-    www.use('/', require('../www/routes.js'));
     www.use('/', express.static(process.env.BASEPATH + '/www/public'));
+    www.use('/', require('../www/routes.js'));
 
     www.app = app;
     app.express = www;
@@ -66,6 +68,11 @@ async function startWebListener(app) {
     server.on('listening', onListening);
 
     console.log('Listening on port ' + process.env.PORT);
+
+    if (process.env.WEBSOCKET_LOAD == 'true') {
+        // Start the websocket
+        app.websocket = require(__dirname + '/websocket');
+    }
 
     watch('www/', {recursive: true}, app.restart);
     watch('.env', {recursive: true}, app.restart);

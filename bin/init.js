@@ -2,6 +2,7 @@ module.exports = startApp;
 
 require('dotenv').config();
 
+const fs = require('fs');
 const util = require('util');
 const Database = require('../classes/Database.js');
 
@@ -75,7 +76,7 @@ async function startApp() {
 
     if (process.env.MONGO_LOAD == 'true') {
         const MongoClient = require('mongodb').MongoClient;
-        const url = MONGO_URL;
+        const url = process.env.MONGO_URL;
         const dbName = process.env.MONGO_DB_NAME;
         const client = new MongoClient(url, {
             useNewUrlParser: true,
@@ -116,6 +117,22 @@ async function startApp() {
             retry_strategy: redis_retry_strategy
         });
         console.log('loaded Redis...');
+    }
+
+    // Check for utils
+    const util_dir = process.env.BASEPATH + '/util/';
+    if (fs.existsSync(util_dir)) {
+        console.log('Checking /util/');
+        app.util = {};
+        fs.readdirSync(util_dir).forEach(file => {            
+            let util_base = file.substr(0, file.length - 3);
+            let util_path = process.env.BASEPATH + '/util/' + file;
+            let util = require(util_path);
+            if (typeof util == 'function') util(app);
+            app.util[util_base] = util;
+
+            console.log('Loaded util', file);
+        });
     }
 
     console.log('fundamen initialized...');

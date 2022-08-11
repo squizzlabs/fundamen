@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = async function (jobType) {
+module.exports = async function (jobType, options = {}) {
 	let app;
 	switch(jobType) {
 		case 'www':
@@ -9,7 +9,7 @@ module.exports = async function (jobType) {
 			return app;
 		case 'cron':
 			app = await require('./bin/init.js')();
-			require('./bin/cron.js')(app);
+			require('./bin/cron.js')(app, options);
 			return app;
 		case 'prepare':
 			prepareApplication();

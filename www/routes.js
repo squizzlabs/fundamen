@@ -16,32 +16,58 @@ let compiled = {};
 const http_methods = ['connect', 'delete', 'get', 'head', 'options', 'patch', 'post', 'put', 'trace'];
 
 try {
-    if (checkFor(process.env.BASEPATH + '/www/controllers')) {
-        addControllers(process.env.BASEPATH + '/www/controllers');
+    const controller_path = process.env.BASEPATH + '/www/controllers';
+    if (checkFor(controller_path)) {
+        const controllers = {};
+        loadControllers(process.env.BASEPATH + '/www/controllers', controllers);
+        addControllers(controllers);
+    } else {
+        console.error('No controller path:', controller_path);
     }
 } catch (e) {
     console.log(e);
 }
 
-function addControllers(file_path) {
+function loadControllers(file_path, controllers) {
     console.log('Controller searching within', file_path)
-    fs.readdirSync(file_path).forEach(file => { 
+    fs.readdirSync(file_path).forEach(file => {
         var full_path = file_path + '/' + file;
         if (fs.lstatSync(full_path).isDirectory()) {
-            addControllers(full_path);
+            loadControllers(full_path, controllers);
         } else if (path.extname(file) == ".js") {
             let controller = require(full_path);
-            if (!Array.isArray(controller.paths)) controller.paths = [controller.paths];
-            if (controller.paths) controller.paths.forEach((controllerPath) => {
-                for (const method of http_methods) {
-                    if (typeof controller[method] == 'function') {
-                        if (controller[method]) addRoute(method, controllerPath, controller, file);
-                        console.log('Adding', method.toUpperCase(), 'route for', file, 'at', controllerPath);
-                    }
-                }
-            });
+            let priority = controller.priority || 0;
+            if (!Array.isArray(controllers[priority])) controllers[priority] = [];
+            controller.file = file;
+            controllers[priority].push(controller);
         }
     });
+}
+
+function addControllers(prioritized_controllers) {
+    for (let priority of Object.keys(prioritized_controllers)) {
+        let controllers = prioritized_controllers[priority];
+        for (let controller of controllers) {
+            if (!Array.isArray(controller.paths)) controller.paths = [controller.paths];
+            for (const method of http_methods) {
+                if (typeof controller[method] == 'function') {
+                    for (let controllerPath of controller.paths) {
+                        if (controller[method]) addRoute(method, controllerPath, controller, controller.file);
+                        console.log('Adding', method.toUpperCase(), 'route for', controller.file, 'at', controllerPath);
+                    }
+                }
+            }
+        }
+    }
+    /*if (!Array.isArray(controller.paths)) controller.paths = [controller.paths];
+    if (controller.paths) controller.paths.forEach((controllerPath) => {
+        for (const method of http_methods) {
+            if (typeof controller[method] == 'function') {
+                if (controller[method]) addRoute(method, controllerPath, controller, file);
+                console.log('Adding', method.toUpperCase(), 'route for', file, 'at', controllerPath);
+            }
+        }
+    });*/
 }
 
 async function doStuff(req, res, next, controller) {
@@ -49,14 +75,19 @@ async function doStuff(req, res, next, controller) {
     try {
         req.verify_query_params = verify_query_params;
 
-        const promise = wrap_promise(controller[req.method.toLowerCase()](req, res));
+        const controller_result = controller[req.method.toLowerCase()](req, res);
+        if (typeof controller_result != 'object') {
+            console.error('Invalid result from controller', controller.file, typeof controller_result, controller_result);
+            return;
+        }
+        const promise = wrap_promise(controller_result);
         const timeout = app.sleep(process.env.HTTP_TIMEOUT || 60000);
 
         await Promise.race([promise, timeout]); 
         if (promise.isFinished() == false) return res.sendStatus(408); // timed out
         
         clearTimeout(timeout);
-        const result = await result;
+        const result = await promise;
 
         if (result.content_type != undefined) res.setHeader("Content-Type", result.content_type);
         if (result.status_code != undefined) res.sendStatus(status_code);
@@ -77,13 +108,13 @@ async function doStuff(req, res, next, controller) {
                 debug: true,
                 cache: false,
             });
-            
+
             res.send(rendered);
         } else res.send(result.package);
     } catch (e) {
         console.log('error', e);
     } finally {
-        next();
+        //next();
     }
 }
 

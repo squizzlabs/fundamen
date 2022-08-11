@@ -1,12 +1,18 @@
 #!/usr/bin/env node
 
 const fs = require('fs');
+let outer_app;
 
 module.exports=init;
 
 let initialized = false;
-function init(app) {
-    if (initialized == false) {
+function init(app, options = {}) {
+    outer_app = app;
+    if (typeof options.cron == 'string') {
+        let task = require(process.env.BASEPATH + '/cron/' + options.cron);
+        task.exec(app);
+    }
+    else if (initialized == false) {
         initialized = true;
         clearRunKeys(app);
     }
@@ -37,28 +43,21 @@ function loadTasks(app) {
 
     let tasks = {};
     fs.readdirSync(cron_path).forEach(file => {
+        if (file.substr(-3) != '.js') return;
         let file_path = process.env.BASEPATH + '/cron/' + file;
         let cron = require(file_path);
-        tasks[file] = createTaskSettings(cron);
-        let cron_about = 'Loaded ' + file + ' to execute every ' + tasks[file].span + ' second interval';
-        if (tasks[file].offset != 0) cron_about += ' with an offset of ' + tasks[file].offset + ' seconds';
+        let task = createTaskSettings(cron);
+
+        if (typeof task.exec != 'function') return;
+        if ((task.span || 0) <= 0) return;
+
+        let cron_about = 'Loaded ' + file + ' to execute every ' + task.span + ' second interval';
+        if (task.offset != 0) cron_about += ' with an offset of ' + task.offset + ' seconds';
+        tasks[file] = task;
         console.log(cron_about);
     });
 
     return tasks;
-}
-
-let taskname = '';
-if (process.argv[2]) {
-    debug(process.argv[2]);
-    return;
-    let onetask = {};
-    let keys = Object.keys(tasks);
-    let tasknum = Number.parseInt(process.argv[2]);
-    if (tasknum >= keys.length) return;
-    taskname = keys[tasknum];
-    console.log(taskname);
-    tasks = {[taskname]: tasks[taskname]};
 }
 
 function createTaskSettings(params) {
@@ -159,5 +158,5 @@ if (fs.existsSync('cron/')) watch('cron/', {recursive: true}, restart);
 if (fs.existsSync('util/')) watch('util/', {recursive: true}, restart);
 
 async function restart(evt, name) {
-    await app.redis.set("RESTART", "true");
+    await outer_app.redis.set("RESTART", "true");
 }
