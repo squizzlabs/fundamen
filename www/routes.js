@@ -13,6 +13,8 @@ const fs = require('fs');
 const path = require('path');
 let compiled = {};
 
+const http_caching_enabled = (process.env.http_caching_enabled | true);
+
 const http_methods = ['connect', 'delete', 'get', 'head', 'options', 'patch', 'post', 'put', 'trace'];
 
 try {
@@ -59,15 +61,6 @@ function addControllers(prioritized_controllers) {
             }
         }
     }
-    /*if (!Array.isArray(controller.paths)) controller.paths = [controller.paths];
-    if (controller.paths) controller.paths.forEach((controllerPath) => {
-        for (const method of http_methods) {
-            if (typeof controller[method] == 'function') {
-                if (controller[method]) addRoute(method, controllerPath, controller, file);
-                console.log('Adding', method.toUpperCase(), 'route for', file, 'at', controllerPath);
-            }
-        }
-    });*/
 }
 
 async function doStuff(req, res, next, controller) {
@@ -75,22 +68,36 @@ async function doStuff(req, res, next, controller) {
     try {
         req.verify_query_params = verify_query_params;
 
-        const controller_result = controller[req.method.toLowerCase()](req, res);
-        if (typeof controller_result != 'object') {
-            console.error('Invalid result from controller', controller.file, typeof controller_result, controller_result);
-            return;
-        }
-        const promise = wrap_promise(controller_result);
-        const timeout = app.sleep(process.env.HTTP_TIMEOUT || 60000);
+        const lowered = req.method.toLowerCase();
+        const send_package = lowered != 'head';
+        const method = (lowered == 'head' ? 'get' : lowered);
 
-        await Promise.race([promise, timeout]); 
-        if (promise.isFinished() == false) return res.sendStatus(408); // timed out
+        let cache_key = 'zkb:http_cache:' + method + ':' + req.originalUrl;
+        let result = (http_caching_enabled ? await app.redis.get(cache_key) : undefined);
+
+        if (result == undefined) {
+            const controller_result = controller[method](req, res);
+            if (typeof controller_result != 'object') {
+                console.error('Invalid result from controller', controller.file, typeof controller_result, controller_result);
+                return;
+            }
+            const promise = wrap_promise(controller_result);
+            const timeout = app.sleep(process.env.HTTP_TIMEOUT || 60000);
+
+            await Promise.race([promise, timeout]); 
+            if (promise.isFinished() == false) return res.sendStatus(408); // timed out
         
-        clearTimeout(timeout);
-        const result = await promise;
+            clearTimeout(timeout);
+            result = await promise;
+            if (http_caching_enabled && (result.ttl || 0) > 0) {
+                await app.redis.setex(cache_key, result.ttl, JSON.stringify(result));
+            }
+        } else {
+            result = JSON.parse(result);
+        }
 
         if (result.content_type != undefined) res.setHeader("Content-Type", result.content_type);
-        if (result.status_code != undefined) res.sendStatus(status_code);
+        if (result.status_code != undefined) res.sendStatus(result.status_code);
         if (result.ttl > 0) res.set('Cache-Control', 'public, max-age=' + result.ttl);
 
         if (result.redirect) res.redirect(result.redirect);
@@ -110,11 +117,9 @@ async function doStuff(req, res, next, controller) {
             });
 
             res.send(rendered);
-        } else res.send(result.package);
+        } else if (result.package) res.send(result.package);
     } catch (e) {
-        console.log('error', e);
-    } finally {
-        //next();
+        console.log('error in fundamen route.js', e);
     }
 }
 
