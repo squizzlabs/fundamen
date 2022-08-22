@@ -28,9 +28,7 @@ async function clearRunKeys(app) {
     for (let i = 0; i < runkeys.length; i++) {
         await app.redis.del(runkeys[i]);
     }
-    setTimeout(function () {
-        runTasks(app, tasks);
-    }, 1);
+    setTimeout(runTasks.bind(null, app, tasks), 1);
 }
 
 function loadTasks(app) {
