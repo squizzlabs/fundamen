@@ -75,6 +75,8 @@ async function startWebListener(app) {
     }
 
     watch('www/', {recursive: true}, app.restart);
+    watch('util/', {recursive: true}, app.restart);
+    watch('bin/', {recursive: true}, app.restart);    
     watch('.env', {recursive: true}, app.restart);
 
     // clear pre-existing REDIS cache

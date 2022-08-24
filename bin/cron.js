@@ -154,6 +154,8 @@ let watch = require('node-watch');
 if (fs.existsSync('.env')) watch('.env', {recursive: true}, restart);
 if (fs.existsSync('cron/')) watch('cron/', {recursive: true}, restart);
 if (fs.existsSync('util/')) watch('util/', {recursive: true}, restart);
+if (fs.existsSync('bin/')) watch('bin/', {recursive: true}, restart);
+
 
 async function restart(evt, name) {
     await outer_app.redis.set("RESTART", "true");
