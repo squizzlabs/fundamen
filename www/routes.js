@@ -81,7 +81,7 @@ async function doStuff(req, res, next, controller) {
                 console.error('Invalid result from controller', controller.file, typeof controller_result, controller_result);
                 return;
             }
-            const promise = wrap_promise(controller_result);
+            const promise = app.wrap_promise(controller_result);
             const timeout = app.sleep(process.env.HTTP_TIMEOUT || 60000);
 
             await Promise.race([promise, timeout]); 
@@ -143,6 +143,11 @@ function verify_query_params(req, valid_array) {
     delete valid_array.required;
     let valid_keys = Object.keys(valid_array);
     let given_keys = Object.keys(query_params);
+
+    // Ensure we have the base correct
+    if (base_url != req._parsedUrl.pathname) {
+        return rebuild_query(base_url, query_params, valid_array, required);
+    }
 
     // Make sure all required fields are present
     for (const req_parameter of required) {
@@ -243,24 +248,6 @@ function rebuild_query(base_url, query_params, valid_array, required) {
         url += (key + '=' + rebuild[key]);
     }
     return url;
-}
-
-function wrap_promise(promise) {
-    // Don't create a wrapper for promises that can already be queried.
-    if (promise.isResolved) return promise;
-    
-    let isFinished = false;
-
-    let isResolved = false;
-    let isRejected = false;
-
-    // Observe the promise, saving the fulfillment in a closure scope.
-    let result = promise.then(
-       function(v) { isFinished = true; return v; }, 
-       function(e) { isFinished = true; throw e; }
-    );
-    result.isFinished = function() { return isFinished};
-    return result;
 }
 
 function checkFor(directory) {
