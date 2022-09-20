@@ -11,6 +11,9 @@ module.exports = async function (jobType, options = {}) {
 			app = await require('./bin/init.js')();
 			require('./bin/cron.js')(app, options);
 			return app;
+		case 'test':
+			app = await require('./bin/init.js')();
+			return app;
 		case 'prepare':
 			prepareApplication();
 			break;
@@ -23,6 +26,7 @@ module.exports = async function (jobType, options = {}) {
 			console.error('   cron - Starts cron jobs, requires basepath to be defined, redis enabled, and a cron directory');
 			console.error('    www - Starts an express server, requires port to be defined')
 			console.error('prepare - Prepares the directory with the basics for cron and www with examples files')
+			console.error('   test - For testing, will instatiate and return app')
 	}
 }
 
