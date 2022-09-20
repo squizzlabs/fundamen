@@ -6,6 +6,9 @@ let debug = require('debug')('server');
 let http = require('http');
 let morgan = require('morgan');
 let watch = require('node-watch');
+let bodyParser = require('body-parser');
+let expressSession = require('express-session');
+let RedisStore = require("connect-redis")(expressSession);
 
 let app = undefined;
 let server;
@@ -43,12 +46,27 @@ async function startWebListener(app) {
     }
 
     app.server_started = server_started;
+    if (process.env.HTTP_COOKIE_SECRET != undefined) {
+        let cookie = {maxAge: ((process.env.HTTP_COOKIE_TIMEOUT_SECONDS | 0) * 1000)}
+        let env = (process.env.env == undefined ? '' : process.env.env).toLowerCase();
+        if (process.env.env == 'prod' || process.env.env == 'production') cookie.secure = true; // https
+        www.use(expressSession({
+            store: new RedisStore({ client: require("redis").createClient() }),
+            secret: process.env.HTTP_COOKIE_SECRET,
+            cookie: cookie,
+            resave: false,
+            rolling: true,
+            saveUninitialized: false
+        }));
+    }
     www.use((req, res, next) => {
         res.locals.server_started = server_started;
         res.locals.app = www.app;
         res.locals.env = env;
         next();
     });
+    www.use(bodyParser.json());
+    www.use(bodyParser.urlencoded({ extended: true }));
 
     www.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
 
