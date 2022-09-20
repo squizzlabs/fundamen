@@ -58,6 +58,23 @@ async function startApp() {
         return now;
     }
 
+    app.wrap_promise = function(promise) {
+        // Don't create a wrapper for promises that can already be queried.
+        if (promise.isResolved) return promise;
+        
+        let isFinished = false;
+
+        let isResolved = false;
+        let isRejected = false;
+
+        // Observe the promise, saving the fulfillment in a closure scope.
+        let result = promise.then(
+           function(v) { isFinished = true; return v; }, 
+           function(e) { isFinished = true; throw e; }
+        );
+        result.isFinished = function() {return isFinished};
+        return result;
+    }
 
     app.phin = require('phin').defaults({
         'method': 'get',
