@@ -89,9 +89,8 @@ async function doStuff(req, res, next, controller) {
         
             clearTimeout(timeout);
             result = await promise;
-            if (http_caching_enabled && (result.ttl || 0) > 0) {
-                await app.redis.setex(cache_key, result.ttl, JSON.stringify(result));
-            }
+            if (result === undefined || result === null) throw 'Invalid null/undefined result from ' + controller.file;
+            else if (http_caching_enabled && (result.ttl | 0) > 0) await app.redis.setex(cache_key, result.ttl, JSON.stringify(result));
         } else {
             result = JSON.parse(result);
         }
