@@ -96,12 +96,6 @@ async function startWebListener(app) {
     watch('util/', {recursive: true}, app.restart);
     watch('bin/', {recursive: true}, app.restart);    
     watch('.env', {recursive: true}, app.restart);
-
-    // clear pre-existing REDIS cache
-    if ((process.env.http_clear_keys_on_start | true)) {
-        let keys = await app.redis.keys('zkb:http_cache:*');
-        for (let key of keys) await app.redis.del(key);
-    }
 }
 
 function onError(error) {
