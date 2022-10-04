@@ -8,6 +8,8 @@ module.exports=init;
 let initialized = false;
 function init(app, options = {}) {
     outer_app = app;
+    app.watch(['.env', 'cron', 'util', 'bin'], restart);
+
     if (typeof options.cron == 'string') {
         let task = require(process.env.BASEPATH + '/cron/' + options.cron);
         task.exec(app);
@@ -119,9 +121,7 @@ async function runTasks(app, tasks) {
         }
     } finally {
         await app.sleep(Math.max(1, 1 + (Date.now() % 1000)));
-        setTimeout(function () {
-            runTasks(app, tasks);
-        }, 1);
+        if (!app.bailout) setTimeout(runTasks.bind(null, app, tasks), 1);
     }
 }
 
@@ -134,7 +134,6 @@ async function runTask(task, f, app, curKey, runKey, iteration) {
         await app.redis.del(curKey);
         await app.redis.del(runKey);
     } finally {
-        //console.log(task + ' finished');
         await app.redis.del(runKey);
         if (app.bailout == true) await app.redis.del(curKey); // Bailed, probably didn't get to finish
     }
@@ -148,14 +147,6 @@ async function debug(task) {
     await runTask(process.argv[2], f, app, '0', '0');
     console.log("Debug finished");
 }
-
-let watch = require('node-watch');
-
-if (fs.existsSync('.env')) watch('.env', {recursive: true}, restart);
-if (fs.existsSync('cron/')) watch('cron/', {recursive: true}, restart);
-if (fs.existsSync('util/')) watch('util/', {recursive: true}, restart);
-if (fs.existsSync('bin/')) watch('bin/', {recursive: true}, restart);
-
 
 async function restart(evt, name) {
     await outer_app.redis.set("RESTART", "true");

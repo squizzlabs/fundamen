@@ -1,6 +1,7 @@
 'use strict';
 
 let express = require('express');
+let fs = require('fs');
 let path = require('path');
 let debug = require('debug')('server');
 let http = require('http');
@@ -10,7 +11,6 @@ let bodyParser = require('body-parser');
 let expressSession = require('express-session');
 let RedisStore = require("connect-redis")(expressSession);
 
-let app = undefined;
 let server;
 
 const server_started = Date.now();
@@ -26,6 +26,8 @@ function init(app) {
 }
 
 async function startWebListener(app) {
+    app.watch(['.env', 'www', 'util', 'bin'], close.bind(null, app));
+
     let www = express();
 
     www.root = process.env.BASEPATH;
@@ -68,7 +70,7 @@ async function startWebListener(app) {
     www.use(bodyParser.json());
     www.use(bodyParser.urlencoded({ extended: true }));
 
-    www.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
+    if (process.env.http_logging != 'false') www.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
 
     www.disable('x-powered-by');
     www.use('/api/', require('cors')());
@@ -87,15 +89,7 @@ async function startWebListener(app) {
 
     console.log('Listening on port ' + process.env.PORT);
 
-    if (process.env.WEBSOCKET_LOAD == 'true') {
-        // Start the websocket
-        app.websocket = require(__dirname + '/websocket');
-    }
-
-    watch('www/', {recursive: true}, app.restart);
-    watch('util/', {recursive: true}, app.restart);
-    watch('bin/', {recursive: true}, app.restart);    
-    watch('.env', {recursive: true}, app.restart);
+    if (process.env.WEBSOCKET_LOAD == 'true') app.websocket = require(__dirname + '/websocket'); // Start the websocket
 }
 
 function onError(error) {
@@ -131,4 +125,10 @@ function onListening() {
         'pipe ' + addr :
         'port ' + addr.port;
     debug('Listening on ' + bind);
+}
+
+async function close(app) {
+    if (server) await server.close();
+    if (app.websocket) await app.websocket.unmount();
+    process.exit();
 }

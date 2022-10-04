@@ -5,6 +5,7 @@ require('dotenv').config();
 const fs = require('fs');
 const util = require('util');
 const Database = require('../classes/Database.js');
+let watch = require('node-watch');
 
 async function startApp() {
     const app = {};
@@ -56,6 +57,15 @@ async function startApp() {
         let now = Math.floor(Date.now() / 1000);
         if (mod != 0) now = now - (now % mod);
         return now;
+    }
+
+    // Will watch files within the app (TODO make sure files are actually within the directory of the app)
+    app.watch = function (fs_locations = [], restart_function) {
+        if (!Array.isArray(fs_locations)) fs_locations = [fs_locations];
+        for (let fs_location of fs_locations) {
+            console.log('watching for changes at', fs_location);
+            watch(process.env.BASEPATH + '/' + fs_location, {recursive: true}, restart_function);
+        }
     }
 
     app.wrap_promise = function(promise) {
