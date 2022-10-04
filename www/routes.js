@@ -110,7 +110,7 @@ async function getResult(app, controller, req, res, method, cache_key) {
     if (result) { // something was cached!
         result = JSON.parse(result);
     } else {
-        const controller_result = controller[method](req, res);
+        const controller_result = controller[method](req, res, app);
         if (typeof controller_result != 'object') throw 'Invalid result from controller' + controller.file + typeof controller_result + controller_result;
 
         const promise = app.wrap_promise(controller_result);
