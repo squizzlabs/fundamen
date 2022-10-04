@@ -1,21 +1,19 @@
 'use strict'; 
 
-const routes = {};
-
+const pug = require('pug');
+const fs = require('fs');
+const path = require('path');
 let express = require('express');
 let router = express.Router({
     strict: true
 });
 module.exports = router;
 
-const pug = require('pug');
-const fs = require('fs');
-const path = require('path');
-let compiled = {};
-
 const http_caching_enabled = (process.env.http_caching_enabled | true);
-
 const http_methods = ['connect', 'delete', 'get', 'head', 'options', 'patch', 'post', 'put', 'trace'];
+const compiled = {};
+const in_progress = {};
+const routes = {};
 
 try {
     const controller_path = process.env.BASEPATH + '/www/controllers';
@@ -65,35 +63,16 @@ function addControllers(prioritized_controllers) {
 
 async function doStuff(req, res, next, controller) {
     const app = req.app.app;
+    req.verify_query_params = verify_query_params;
+
+    const lowered = req.method.toLowerCase();
+    const send_package = lowered != 'head';
+    const method = (lowered == 'head' ? 'get' : lowered);
+    let cache_key = 'zkb:http_cache:' + method + ':' + req.originalUrl;
+
     try {
-        req.verify_query_params = verify_query_params;
-
-        const lowered = req.method.toLowerCase();
-        const send_package = lowered != 'head';
-        const method = (lowered == 'head' ? 'get' : lowered);
-
-        let cache_key = 'zkb:http_cache:' + method + ':' + req.originalUrl;
-        let result = (http_caching_enabled ? await app.redis.get(cache_key) : undefined);
-
-        if (result == undefined) {
-            const controller_result = controller[method](req, res);
-            if (typeof controller_result != 'object') {
-                console.error('Invalid result from controller', controller.file, typeof controller_result, controller_result);
-                return;
-            }
-            const promise = app.wrap_promise(controller_result);
-            const timeout = app.sleep(process.env.HTTP_TIMEOUT || 60000);
-
-            await Promise.race([promise, timeout]); 
-            if (promise.isFinished() == false) return res.sendStatus(408); // timed out
-        
-            clearTimeout(timeout);
-            result = await promise;
-            if (result === undefined || result === null) throw 'Invalid null/undefined result from ' + controller.file;
-            else if (http_caching_enabled && (result.ttl | 0) > 0) await app.redis.setex(cache_key, result.ttl, JSON.stringify(result));
-        } else {
-            result = JSON.parse(result);
-        }
+        if (in_progress[cache_key] == undefined) in_progress[cache_key] = getResult(app, controller, req, res, method, cache_key);
+        let result = await in_progress[cache_key];
 
         if (result.content_type != undefined) res.setHeader("Content-Type", result.content_type);
         if (result.status_code != undefined) res.sendStatus(result.status_code);
@@ -115,11 +94,37 @@ async function doStuff(req, res, next, controller) {
                 cache: false,
             });
 
-            res.send(rendered);
-        } else if (result.package) res.send(result.package);
+            if (send_package) res.send(rendered);
+        } else if (send_package && result.package) res.send(result.package);
     } catch (e) {
         console.log('error in fundamen route.js', e);
+    } finally {
+        await in_progress[cache_key]; // ensure the promise has finished 
+        delete in_progress[cache_key];
     }
+}
+
+async function getResult(app, controller, req, res, method, cache_key) {
+    let result = (http_caching_enabled ? await app.redis.get(cache_key) : undefined);
+
+    if (result) { // something was cached!
+        result = JSON.parse(result);
+    } else {
+        const controller_result = controller[method](req, res);
+        if (typeof controller_result != 'object') throw 'Invalid result from controller' + controller.file + typeof controller_result + controller_result;
+
+        const promise = app.wrap_promise(controller_result);
+        /*const timeout = app.sleep(process.env.HTTP_TIMEOUT || 60000);
+
+        await Promise.race([promise, timeout]); 
+        if (promise.isFinished() == false) return res.sendStatus(408); // timed out*/
+    
+        result = await promise;
+        if (result === undefined || result === null) throw 'Invalid null/undefined result from ' + controller.file;
+        else if (http_caching_enabled && (result.ttl | 0) > 0) await app.redis.setex(cache_key, result.ttl, JSON.stringify(result));
+    }
+
+    return result;
 }
 
 function addRoute(routeType, route, controller) {
