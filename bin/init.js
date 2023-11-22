@@ -63,8 +63,10 @@ async function startApp() {
     app.watch = function (fs_locations = [], restart_function) {
         if (!Array.isArray(fs_locations)) fs_locations = [fs_locations];
         for (let fs_location of fs_locations) {
-            console.log('watching for changes at', fs_location);
-            watch(process.env.BASEPATH + '/' + fs_location, {recursive: true}, restart_function);
+            if (fs.existsSync(fs_location)) {
+                console.log('watching for changes at', fs_location);
+                watch(process.env.BASEPATH + '/' + fs_location, {recursive: true}, restart_function);
+            }
         }
     }
 
