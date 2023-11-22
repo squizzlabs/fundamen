@@ -88,20 +88,22 @@ async function startApp() {
         return result;
     }
 
-    app.phin = require('phin').defaults({
-        'method': 'get',
-        'headers': {
-            'User-Agent': process.env.USER_AGENT
-        }
-    });
-    app.fetch = async function (url, parser, failure, options) {
-        try {
-            return await parser(app, await phin(url), options);
-        } catch (e) {
-            return failure(app, e);
-        }
-    };
-    console.log('loaded Phin...');
+    if (process.env.PHIN_LOAD) {
+        app.phin = require('phin').defaults({
+            'method': 'get',
+            'headers': {
+                'User-Agent': process.env.USER_AGENT
+            }
+        });
+        app.fetch = async function (url, parser, failure, options) {
+            try {
+                return await parser(app, await phin(url), options);
+            } catch (e) {
+                return failure(app, e);
+            }
+        };
+        console.log('loaded Phin...');
+    }
 
     if (process.env.MONGO_LOAD == 'true') {
         const MongoClient = require('mongodb').MongoClient;
