@@ -68,7 +68,7 @@ async function doStuff(req, res, next, controller) {
     const lowered = req.method.toLowerCase();
     const send_package = lowered != 'head';
     const method = (lowered == 'head' ? 'get' : lowered);
-    let cache_key = 'zkb:http_cache:' + method + ':' + req.originalUrl;
+    let cache_key = 'fundamen:http_cache:' + method + ':' + req.originalUrl;
 
     try {
         if (in_progress[cache_key] == undefined) in_progress[cache_key] = getResult(app, controller, req, res, method, cache_key);
@@ -77,6 +77,7 @@ async function doStuff(req, res, next, controller) {
         if (result.content_type != undefined) res.setHeader("Content-Type", result.content_type);
         if (result.status_code != undefined) res.sendStatus(result.status_code);
         if (result.ttl > 0) res.set('Cache-Control', 'public, max-age=' + result.ttl);
+        if (result.cors) res.set('Access-Control-Allow-Origin', result.cors);
 
         if (result.redirect) res.redirect(result.redirect);
         else if (result.json !== undefined) res.json(result.json);
