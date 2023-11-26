@@ -79,6 +79,10 @@ async function startWebListener(app) {
         console.log("using public directory www/public/");
         www.use('/', express.static(process.env.BASEPATH + '/www/public'));
     }
+    if (fs.existsSync(process.env.www_public)) {
+        console.log("using public directory " + process.env.www_public);
+        www.use('/', express.static(process.env.www_public));
+    }
     www.use('/', require('../www/routes.js'));
 
     www.app = app;
