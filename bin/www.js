@@ -89,6 +89,10 @@ async function startWebListener(app) {
     app.express = www;
 
     server = http.createServer(www);
+    if (process.env.PORT == undefined) {
+        console.error("PORT for www listening not defined within env");
+        process.exit(1);
+    }
     server.listen(process.env.PORT);
     server.timeout = 3600000;
     server.on('error', onError);
