@@ -67,15 +67,18 @@ async function startWebListener(app) {
         res.locals.env = env;
         next();
     });
-    www.use(bodyParser.json());
     www.use(bodyParser.urlencoded({ extended: true }));
+    www.use(bodyParser.json());
 
     if (process.env.http_logging != 'false') www.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
 
     www.disable('x-powered-by');
     www.use('/api/', require('cors')());
 
-    www.use('/', express.static(process.env.BASEPATH + '/www/public'));
+    if (fs.existsSync(process.env.BASEPATH + '/www/public/')) {
+        console.log("using public directory www/public/");
+        www.use('/', express.static(process.env.BASEPATH + '/www/public'));
+    }
     www.use('/', require('../www/routes.js'));
 
     www.app = app;
