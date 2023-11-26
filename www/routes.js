@@ -71,13 +71,17 @@ async function doStuff(req, res, next, controller) {
     let cache_key = 'fundamen:http_cache:' + method + ':' + req.originalUrl;
 
     try {
-        if (in_progress[cache_key] == undefined) in_progress[cache_key] = getResult(app, controller, req, res, method, cache_key);
-        let result = await in_progress[cache_key];
+        let result;
+        if (method == 'get') {
+            if (in_progress[cache_key] == undefined) in_progress[cache_key] = getResult(app, controller, req, res, method, cache_key);
+            result = await in_progress[cache_key];
+        } else result = await getResult(app, controller, req, res, method, cache_key);
 
         if (result.content_type != undefined) res.setHeader("Content-Type", result.content_type);
-        if (result.status_code != undefined) res.sendStatus(result.status_code);
         if (result.ttl > 0) res.set('Cache-Control', 'public, max-age=' + result.ttl);
         if (result.cors) res.set('Access-Control-Allow-Origin', result.cors);
+
+        if (result.status_code != undefined) res.status(result.status_code);
 
         if (result.redirect) res.redirect(result.redirect);
         else if (result.json !== undefined) res.json(result.json);
@@ -97,6 +101,8 @@ async function doStuff(req, res, next, controller) {
 
             if (send_package) res.send(rendered);
         } else if (send_package && result.package) res.send(result.package);
+
+        res.end();
     } catch (e) {
         console.log('error in fundamen route.js', e);
     } finally {
