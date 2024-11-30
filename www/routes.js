@@ -112,26 +112,31 @@ async function doStuff(req, res, next, controller) {
 }
 
 async function getResult(app, controller, req, res, method, cache_key) {
-    let result = (http_caching_enabled ? await app.redis.get(cache_key) : undefined);
+    try {
+        let result = (http_caching_enabled ? await app.redis.get(cache_key) : undefined);
 
-    if (result) { // something was cached!
-        result = JSON.parse(result);
-    } else {
-        const controller_result = controller[method](req, res, app);
-        if (typeof controller_result != 'object') throw 'Invalid result from controller' + controller.file + typeof controller_result + controller_result;
+        if (result) { // something was cached!
+            result = JSON.parse(result);
+        } else {
+            const controller_result = controller[method](req, res, app);
+            if (typeof controller_result != 'object') throw 'Invalid result from controller' + controller.file + typeof controller_result + controller_result;
 
-        const promise = app.wrap_promise(controller_result);
-        /*const timeout = app.sleep(process.env.HTTP_TIMEOUT || 60000);
+            const promise = app.wrap_promise(controller_result);
+            /*const timeout = app.sleep(process.env.HTTP_TIMEOUT || 60000);
 
-        await Promise.race([promise, timeout]); 
-        if (promise.isFinished() == false) return res.sendStatus(408); // timed out*/
-    
-        result = await promise;
-        if (result === undefined || result === null) throw 'Invalid null/undefined result from ' + controller.file;
-        else if (http_caching_enabled && (result.ttl | 0) > 0) await app.redis.setex(cache_key, result.ttl, JSON.stringify(result));
+            await Promise.race([promise, timeout]); 
+            if (promise.isFinished() == false) return res.sendStatus(408); // timed out*/
+        
+            result = await promise;
+            if (result === undefined || result === null) throw 'Invalid null/undefined result from ' + controller.file;
+            else if (http_caching_enabled && (result.ttl | 0) > 0) await app.redis.setex(cache_key, result.ttl, JSON.stringify(result));
+        }
+
+        return result;
+    } catch (e) {
+        console.error(e, e.stack);
+        return {status_code: 500};
     }
-
-    return result;
 }
 
 function addRoute(routeType, route, controller) {

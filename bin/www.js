@@ -49,16 +49,21 @@ async function startWebListener(app) {
 
     app.server_started = server_started;
     if (process.env.HTTP_COOKIE_SECRET != undefined) {
-        let cookie = {maxAge: ((process.env.HTTP_COOKIE_TIMEOUT_SECONDS | 0) * 1000)}
+        let cookie = {
+            secure: process.env.HTTP_COOKIE_SECURE || (process.env.NODE_ENV == "prod" || process.env.NODE_ENV == "production"),
+            httpOnly: process.env.HTTP_COOKIE_HTTPONLY || true, 
+            sameSite: process.env.HTTP_COOKIE_SAMESITE || 'strict', 
+            maxAge: ((process.env.HTTP_COOKIE_TIMEOUT_SECONDS | 0) * 1000)
+        }
         let env = (process.env.env == undefined ? '' : process.env.env).toLowerCase();
         if (process.env.env == 'prod' || process.env.env == 'production') cookie.secure = true; // https
         www.use(expressSession({
             store: new RedisStore({ client: require("redis").createClient() }),
             secret: process.env.HTTP_COOKIE_SECRET,
             cookie: cookie,
-            resave: false,
-            rolling: true,
-            saveUninitialized: false
+            resave: process.env.HTTP_COOKIE_RESAVE || false,
+            rolling: process.env.HTTP_COOKIE_ROLLING || true,
+            saveUninitialized: process.env.HTTP_COOKIE_SAVEUNINITIALIZED || false
         }));
     }
     www.use((req, res, next) => {

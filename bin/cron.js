@@ -47,7 +47,11 @@ function loadTasks(app) {
         let file_path = process.env.BASEPATH + '/cron/' + file;
         let cron = require(file_path);
         let task = createTaskSettings(cron);
-
+        
+        if (typeof task.init == 'function') {
+            console.log('Loaded ' + file + ' for initialization');
+            setTimeout(task.init.bind(null, app), 1);
+        }
         if (typeof task.exec != 'function') return;
         if ((task.span || 0) <= 0) return;
 
@@ -63,6 +67,7 @@ function loadTasks(app) {
 function createTaskSettings(params) {
     return {
         exec: params.exec,
+        init: params.init,
         span: params.span || 1,
         iterations: params.iterations || 0,
         offset: params.offset || 0
