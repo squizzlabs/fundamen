@@ -9,7 +9,7 @@ let router = express.Router({
 });
 module.exports = router;
 
-const http_caching_enabled = (process.env.http_caching_enabled | true);
+const http_caching_enabled = (process.env.http_caching_enabled | false);
 const http_methods = ['connect', 'delete', 'get', 'head', 'options', 'patch', 'post', 'put', 'trace'];
 const compiled = {};
 const in_progress = {};
