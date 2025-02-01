@@ -50,20 +50,18 @@ async function startWebListener(app) {
     app.server_started = server_started;
     if (process.env.HTTP_COOKIE_SECRET != undefined) {
         let cookie = {
-            secure: process.env.HTTP_COOKIE_SECURE || (process.env.NODE_ENV == "prod" || process.env.NODE_ENV == "production"),
-            httpOnly: process.env.HTTP_COOKIE_HTTPONLY || true, 
-            sameSite: process.env.HTTP_COOKIE_SAMESITE || 'strict', 
-            maxAge: ((process.env.HTTP_COOKIE_TIMEOUT_SECONDS | 0) * 1000)
+            secure: !(process.env.HTTP_COOKIE_SECURE == 'false'),
+            httpOnly: process.env.HTTP_COOKIE_HTTPONLY == 'true', 
+            sameSite: process.env.HTTP_COOKIE_SAMESITE || 'None', 
+            maxAge: ((process.env.HTTP_COOKIE_TIMEOUT_SECONDS || 0) * 1000)
         }
-        let env = (process.env.env == undefined ? '' : process.env.env).toLowerCase();
-        if (process.env.env == 'prod' || process.env.env == 'production') cookie.secure = true; // https
         www.use(expressSession({
             store: new RedisStore({ client: require("redis").createClient() }),
             secret: process.env.HTTP_COOKIE_SECRET,
             cookie: cookie,
-            resave: process.env.HTTP_COOKIE_RESAVE || false,
-            rolling: process.env.HTTP_COOKIE_ROLLING || true,
-            saveUninitialized: process.env.HTTP_COOKIE_SAVEUNINITIALIZED || false
+            resave: process.env.HTTP_COOKIE_RESAVE == 'true',
+            rolling: process.env.HTTP_COOKIE_ROLLING == 'true',
+            saveUninitialized: process.env.HTTP_COOKIE_SAVEUNINITIALIZED == 'true'
         }));
     }
     www.use((req, res, next) => {
