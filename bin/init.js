@@ -109,18 +109,19 @@ async function startApp() {
         const MongoClient = require('mongodb').MongoClient;
         const url = process.env.MONGO_URL;
         const dbName = process.env.MONGO_DB_NAME;
+        console.log('MongoDB connecting', url, dbName);
         const client = new MongoClient(url, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
-            connectTimeoutMS: 3600000,
-            socketTimeoutMS: 3600000,
+            connectTimeoutMS: 100000,
+            socketTimeoutMS: 100000,
         });
 
         try {
             await client.connect();
         } catch (e) {
             // server not up? wait 15 seconds and exit, let the daemon restart us
-            await app.sleep(15000);
+            console.error(e);
             process.exit();
         }
         app.db = client.db(dbName);
