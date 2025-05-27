@@ -60,7 +60,7 @@ async function startApp() {
     }
 
     // Will watch files within the app (TODO make sure files are actually within the directory of the app)
-    app.watch = function (fs_locations = [], restart_function) {
+    if (process.env.WATCH_FILES == true) app.watch = function (fs_locations = [], restart_function) {
         if (!Array.isArray(fs_locations)) fs_locations = [fs_locations];
         for (let fs_location of fs_locations) {
             if (fs.existsSync(fs_location)) {

@@ -26,7 +26,7 @@ function init(app) {
 }
 
 async function startWebListener(app) {
-    app.watch(['.env', 'www', 'util', 'bin'], close.bind(null, app));
+    if (process.env.WATCH_FILES == true) app.watch(['.env', 'www', 'util', 'bin'], close.bind(null, app));
 
     let www = express();
 
