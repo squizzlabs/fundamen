@@ -60,6 +60,7 @@ async function startApp() {
     }
 
     // Will watch files within the app (TODO make sure files are actually within the directory of the app)
+    if (process.env.FILE_WATCH === true) {
     app.watch = function (fs_locations = [], restart_function) {
         if (!Array.isArray(fs_locations)) fs_locations = [fs_locations];
         for (let fs_location of fs_locations) {
@@ -68,6 +69,7 @@ async function startApp() {
                 watch(process.env.BASEPATH + '/' + fs_location, {recursive: true}, restart_function);
             }
         }
+    }
     }
 
     app.wrap_promise = function(promise) {
@@ -145,6 +147,7 @@ async function startApp() {
 
     if (process.env.REDIS_LOAD == 'true') {
         app.redis = require('async-redis').createClient({
+	    url: process.env.REDIS_URL || 'redis://localhost:6379',
             retry_strategy: redis_retry_strategy
         });
         console.log('loaded Redis...');
