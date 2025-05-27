@@ -146,10 +146,8 @@ async function startApp() {
     }
 
     if (process.env.REDIS_URL) {
-        console.log('Loading redis...');
-        const { createClient } = require('redis');
-        app.redis = await createClient({ url: process.env.REDIS_URL });
-        await app.redis.connect();
+        const Redis = require('ioredis');
+        app.redis = new Redis(process.env.REDIS_URL);
         console.log('Redis connected...');
     }
 
