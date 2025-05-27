@@ -147,10 +147,7 @@ async function startApp() {
 
     if (process.env.REDIS_LOAD == 'true') {
 	console.log('connecting redis', process.env.REDIS_URL);
-        app.redis = require('async-redis').createClient({
-	    url: process.env.REDIS_URL,
-            retry_strategy: redis_retry_strategy
-        });
+        app.redis = require('async-redis').createClient(process.env.REDIS_URL);
         console.log('loaded Redis...');
     }
 
