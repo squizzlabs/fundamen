@@ -143,13 +143,18 @@ async function startApp() {
         console.log('loaded MySQL...');
     }
 
-    if (process.env.REDIS_LOAD == 'true') {
-        app.redis = require('async-redis').createClient({
-            url: process.env.REDIS_URL || 'redis://localhost:6379',
-            retry_strategy: redis_retry_strategy
-        });
-        console.log('loaded Redis...');
+    app.createRedisClient = (
+        host = (process.env.REDIS_HOST || 'localhost'),
+        port = (process.env.REDIS_PORT || 6379),
+        auth = (process.env.REDIS_AUTH || null)
+    ) => {
+        const client = require('async-redis').createClient(port, host);
+        if (auth) app.redis.auth(auth);
+        console.log('Connected to Redis...', host, port);
+        return client;
     }
+
+    if (process.env.REDIS_LOAD == 'true') app.redis = app.createRedisClient();
 
     // Check for utils
     const util_dir = process.env.BASEPATH + '/util/';
