@@ -150,7 +150,7 @@ async function startApp() {
         auth = (process.env.REDIS_AUTH || null)
     ) => {
         const client = require('async-redis').createClient(port, host);
-        if (auth) app.redis.auth(auth);
+        if (auth) client.auth(auth);
         console.log('Connected to Redis...', host, port);
         return client;
     }
