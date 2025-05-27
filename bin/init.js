@@ -145,10 +145,12 @@ async function startApp() {
         console.log('loaded MySQL...');
     }
 
-    if (process.env.REDIS_LOAD == 'true') {
-	console.log('connecting redis', process.env.REDIS_URL);
-        app.redis = require('async-redis').createClient(process.env.REDIS_URL);
-        console.log('loaded Redis...');
+    if (process.env.REDIS_URL) {
+        console.log('Loading redis...');
+        const { createClient } = require('redis');
+        app.redis = await createClient({ url: process.env.REDIS_URL });
+        await app.redis.connect();
+        console.log('Redis connected...');
     }
 
     // Check for utils
