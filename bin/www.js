@@ -103,7 +103,8 @@ async function startWebListener(app) {
 
     console.log('Listening on port ' + process.env.PORT);
 
-    if (process.env.WEBSOCKET_LOAD == 'true') app.websocket = require(__dirname + '/websocket'); // Start the websocket
+    if (process.env.WEBSOCKET_LOAD == 'true') app.websocket =  new (require("websocket").server)({ httpServer: server, url: '/websocket', autoAcceptConnections: true });
+    // app.websocket = require(__dirname + '/websocket'); // Start the websocket
 }
 
 function onError(error) {
