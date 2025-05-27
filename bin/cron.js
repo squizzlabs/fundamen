@@ -8,7 +8,7 @@ module.exports=init;
 let initialized = false;
 function init(app, options = {}) {
     outer_app = app;
-    if (app.watch) app.watch(['.env', 'cron', 'util', 'bin'], restart);
+    app.watch(['.env', 'cron', 'util', 'bin'], restart);
 
     if (typeof options.cron == 'string') {
         let task = require(process.env.BASEPATH + '/cron/' + options.cron);

@@ -1,8 +1,9 @@
 {
   "name": "fundamen",
-  "version": "0.2.14",
+  "version": "0.2.7",
   "license": "MIT",
   "dependencies": {
+    "async-redis": "^2.0.*",
     "body-parser": "^1.20.*",
     "connect-redis": "^6.1.*",
     "cors": "^2.8.*",
@@ -10,7 +11,6 @@
     "express": "^4.17.*",
     "express-force-ssl": "^0.3.*",
     "express-session": "^1.17.*",
-    "ioredis": "^5.6.1",
     "md5": "^2.3.*",
     "mongodb": "^3.6.*",
     "morgan": "^1.10.*",
@@ -19,8 +19,7 @@
     "phin": "^3.7.*",
     "pug": "^3.0.*",
     "utf8": "^3.0.*",
-    "websocket": "^1.0.*",
-    "ws": "^8.18.2"
+    "websocket": "^1.0.*"
   },
   "main": "app.js",
   "repository": {

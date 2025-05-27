@@ -26,7 +26,7 @@ function init(app) {
 }
 
 async function startWebListener(app) {
-    if(app.watch) app.watch(['.env', 'www', 'util', 'bin'], close.bind(null, app));
+    app.watch(['.env', 'www', 'util', 'bin'], close.bind(null, app));
 
     let www = express();
 
@@ -103,12 +103,7 @@ async function startWebListener(app) {
 
     console.log('Listening on port ' + process.env.PORT);
 
-    if (process.env.WEBSOCKET_LOAD == 'true') {
-        const WebSocket = require('ws');
-        app.websocket = new WebSocket.Server({ server, path: process.env.WEBSOCKET_URL });
-        console.log('wss enabled');
-    }
-    //require(__dirname + '/websocket'); // Start the websocket
+    if (process.env.WEBSOCKET_LOAD == 'true') app.websocket = require(__dirname + '/websocket'); // Start the websocket
 }
 
 function onError(error) {
