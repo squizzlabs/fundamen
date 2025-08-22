@@ -11,6 +11,7 @@
     "express": "^4.17.*",
     "express-force-ssl": "^0.3.*",
     "express-session": "^1.17.*",
+    "ioredis": "^5.7.0",
     "md5": "^2.3.*",
     "mongodb": "^3.6.*",
     "morgan": "^1.10.*",
@@ -18,7 +19,6 @@
     "node-watch": "^0.6.*",
     "phin": "^3.7.*",
     "pug": "^3.0.*",
-    "redis": "^5.1.0",
     "utf8": "^3.0.*",
     "websocket": "^1.0.*"
   },

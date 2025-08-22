@@ -1,8 +1,9 @@
 'use strict';
 
-module.exports = async function (jobType, options = {}) {
+module.exports = async function (jobType = '', options = {}) {
 	let app;
-	switch(jobType) {
+	console.log('fundamen', jobType, options);
+	switch (jobType) {
 		case 'www':
 			app = await require('./bin/init.js')();
 			require('./bin/www.js')(app);
@@ -20,9 +21,10 @@ module.exports = async function (jobType, options = {}) {
 		case '?':
 		case 'help':
 		case '--h':
+		case '':
 		default:
 			console.error('Unknown job type', jobType);
-			console.error('Valid job types are www, cron, prepare'); 
+			console.error('Valid job types are www, cron, prepare');
 			console.error('   cron - Starts cron jobs, requires basepath to be defined, redis enabled, and a cron directory');
 			console.error('    www - Starts an express server, requires port to be defined')
 			console.error('prepare - Prepares the directory with the basics for cron and www with examples files')
@@ -75,3 +77,6 @@ function prepareApplication() {
 
 	// Create the cron directory
 }
+
+module.exports(process.env.argv);
+console.log(process.env);
