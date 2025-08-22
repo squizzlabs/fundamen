@@ -2,7 +2,6 @@
 
 module.exports = async function (jobType = '', options = {}) {
 	let app;
-	console.log('fundamen', jobType, options);
 	switch (jobType) {
 		case 'www':
 			app = await require('./bin/init.js')();
@@ -77,6 +76,3 @@ function prepareApplication() {
 
 	// Create the cron directory
 }
-
-module.exports(process.env.argv);
-console.log(process.env);

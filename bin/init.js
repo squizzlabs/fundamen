@@ -130,7 +130,7 @@ async function startApp() {
 			console.log('Prepping ' + collections[i].name);
 			app.db[collections[i].name] = app.db.collection(collections[i].name);
 		}
-		console.log('loaded MongoDB...');
+		console.log('Loaded MongoDB...');
 	}
 
 	if (process.env.MYSQL_LOAD == 'true') {
@@ -149,9 +149,9 @@ async function startApp() {
 		port = (process.env.REDIS_PORT || 6379),
 		auth = (process.env.REDIS_AUTH || null)
 	) => {
-		const client = require('async-redis').createClient(port, host);
+		const client = require('ioredis').createClient(port, host);
 		if (auth) client.auth(auth);
-		console.log('Connected to Redis...', host, port);
+		console.log('Connected to Redis...', host, port, (auth ? 'with auth' : ''));
 		return client;
 	}
 

@@ -43,7 +43,7 @@ async function startWebListener(app) {
 		for (const key of keys) {
 			const value = process.env[key];
 			env[key] = value;
-			console.log('Porting', key, value, 'for use by res');
+			console.log('Porting', key, 'for use by res');
 		}
 	}
 
@@ -56,7 +56,7 @@ async function startWebListener(app) {
 			maxAge: ((process.env.HTTP_COOKIE_TIMEOUT_SECONDS || 0) * 1000)
 		}
 		www.use(expressSession({
-			store: new RedisStore({ client: require("redis").createClient() }),
+			store: new RedisStore({ client: await app.redis.createRedisClient() }),
 			secret: process.env.HTTP_COOKIE_SECRET,
 			cookie: cookie,
 			resave: process.env.HTTP_COOKIE_RESAVE == 'true',
