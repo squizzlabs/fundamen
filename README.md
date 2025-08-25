@@ -47,7 +47,6 @@ The following .env variables will affect fundamen
 
 *REQUIRED*
 
-
 - PORT the port to listen on
 
 *Optional*
@@ -60,6 +59,7 @@ The following .env variables will affect fundamen
 - HTTP_COOKIE_HTTPONLY true
 - HTTP_COOKIE_SAMESITE 'strict'
 - HTTP_COOKIE_TIMEOUT_SECONDS 0 
+- HTTP_EXTENDED_LIMIT extends express' bodyparser maximum size to this limit, e.g. 50mb
 
 - WATCH_FILES_WWW a comma delimited list of files to stop execution when modified
 
