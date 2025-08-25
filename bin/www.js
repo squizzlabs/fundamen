@@ -37,6 +37,11 @@ async function startWebListener(app) {
 
 	if (process.env.ENABLE_ETAG == 'true') www.enable('etag');
 
+	if (process.env.HTTP_EXTENDED_LIMIT != undefined) {
+		www.use(express.json({ limit: process.env.HTTP_EXTENDED_LIMIT }));
+		www.use(express.urlencoded({ limit: process.env.HTTP_EXTENDED_LIMIT, extended: true }));
+	}
+
 	const env = {};
 	if (process.env.env2res !== undefined) {
 		const keys = process.env.env2res.split(',');
