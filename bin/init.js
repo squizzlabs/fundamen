@@ -61,14 +61,14 @@ async function startApp() {
 
 	// Will watch files within the app (TODO make sure files are actually within the directory of the app)
 	if (process.env.WATCH_FILES || process.env.WATCH_FILES_WWW || process.env.WATCH_FILES_CRON) {
-		app.watch = function (fs_locations = [], restart_function) {
+		app.watch = function (fs_locations = [], trigger_function) {
 			if (typeof fs_locations == 'string') fs_locations = fs_locations.split(',');
 			else if (!Array.isArray(fs_locations)) fs_locations = [fs_locations];
 
 			for (let fs_location of fs_locations) {
 				if (fs.existsSync(fs_location)) {
 					console.log('watching for changes at', fs_location);
-					watch(process.env.BASEPATH + '/' + fs_location, { recursive: true }, restart_function);
+					watch(process.env.BASEPATH + '/' + fs_location, { recursive: true }, trigger_function);
 				}
 			}
 		}
@@ -156,7 +156,7 @@ async function startApp() {
 		port = (process.env.REDIS_PORT || 6379),
 		auth = (process.env.REDIS_AUTH || null)
 	) => {
-		const client = require('ioredis').createClient(port, host);
+		const client = require('async-redis').createClient(port, host);
 		if (auth) client.auth(auth);
 		console.log('Connected to Redis...', host, port, (auth ? 'with auth' : ''));
 		return client;
