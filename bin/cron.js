@@ -8,7 +8,11 @@ module.exports = init;
 let initialized = false;
 function init(app, options = {}) {
 	outer_app = app;
-	if (process.env.WATCH_FILES == true) app.watch(['.env', 'cron', 'util', 'bin'], restart);
+	if (process.env.WATCH_FILES_CRON) {
+		app.watch(process.env.WATCH_FILES_CRON, restart);
+	}
+	process.on('SIGTERM', restart);
+	process.on('SIGINT', restart);
 
 	if (typeof options.cron == 'string') {
 		let task = require(process.env.BASEPATH + '/cron/' + options.cron);

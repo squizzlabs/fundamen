@@ -26,7 +26,9 @@ function init(app) {
 }
 
 async function startWebListener(app) {
-	if (process.env.WATCH_FILES == true) app.watch(['.env', 'www', 'util', 'bin'], close.bind(null, app));
+	if (process.env.WATCH_FILES_WWW) {
+		app.watch(process.env.WATCH_FILES_WWW, close.bind(null, app));
+	}
 	process.on('SIGTERM', close.bind(null, app));
 	process.on('SIGINT', close.bind(null, app));
 

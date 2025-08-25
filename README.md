@@ -4,11 +4,19 @@ The app's .env file must have the following defined:
 
 - BASEPATH location of the app
 
+(optional) 
+
+- WATCH_FILES a comma delimited list of files to stop execution when modified
+
 # Cron
 
 fundamen implements an easy to use method for javascript files to run in a cron-like fashion for the following files
 
     ./cron/*.js
+
+## .env
+
+- WATCH_FILES_CRON a comma delimited list of files to stop execution when modified
 
 ## Parameters
 
@@ -52,6 +60,8 @@ The following .env variables will affect fundamen
 - HTTP_COOKIE_HTTPONLY true
 - HTTP_COOKIE_SAMESITE 'strict'
 - HTTP_COOKIE_TIMEOUT_SECONDS 0 
+
+- WATCH_FILES_WWW a comma delimited list of files to stop execution when modified
 
 - http_caching_enabled, defaults to false, if enabled will utilize redis for caching GET requests only
 - http_logging false, whether or not to emit log events for web requests 
