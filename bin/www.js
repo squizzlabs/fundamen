@@ -27,6 +27,8 @@ function init(app) {
 
 async function startWebListener(app) {
 	if (process.env.WATCH_FILES == true) app.watch(['.env', 'www', 'util', 'bin'], close.bind(null, app));
+	process.on('SIGTERM', close.bind(null, app));
+	process.on('SIGINT', close.bind(null, app));
 
 	let www = express();
 
@@ -148,6 +150,7 @@ function onListening() {
 }
 
 async function close(app) {
+	console.log('Shutting down... waiting for connections to close...');
 	if (server) await server.close();
 	if (app.websocket) await app.websocket.unmount();
 	process.exit();
