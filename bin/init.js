@@ -43,7 +43,7 @@ async function startApp() {
 			min = 0;
 			max = min;
 		} else if (max < min) {
-			throw 'max cannot be greather than min ' + min + ' ' + max;
+			throw 'max cannot be lesser than min ' + min + ' ' + max;
 		}
 
 		let base = min;
