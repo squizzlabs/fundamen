@@ -9,7 +9,7 @@ let morgan = require('morgan');
 let watch = require('node-watch');
 let bodyParser = require('body-parser');
 let expressSession = require('express-session');
-let RedisStore = require("connect-redis")(expressSession);
+let RedisStore = require("connect-redis").default;
 
 let server;
 

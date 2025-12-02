@@ -118,8 +118,6 @@ async function startApp() {
 		const dbName = process.env.MONGO_DB_NAME;
 		console.log('MongoDB connecting', url, dbName);
 		const client = new MongoClient(url, {
-			useNewUrlParser: true,
-			useUnifiedTopology: true,
 			connectTimeoutMS: 100000,
 			socketTimeoutMS: 100000,
 		});
