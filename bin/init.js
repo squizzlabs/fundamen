@@ -114,7 +114,7 @@ async function startApp() {
 
 	if (process.env.MONGO_LOAD == 'true') {
 		const MongoClient = require('mongodb').MongoClient;
-		const url = process.env.MONGO_URL;
+		const url = process.env.MONGO_CONNECTION_URL || process.env.MONGO_URL;
 		const dbName = process.env.MONGO_DB_NAME;
 		console.log('MongoDB connecting', url, dbName);
 		const client = new MongoClient(url, {
@@ -139,12 +139,13 @@ async function startApp() {
 	}
 
 	if (process.env.MYSQL_LOAD == 'true') {
-		let mysql = new Database({
+		let config = process.env.MYSQL_CONNECTION_URL || {
 			host: process.env.MYSQL_HOST,
 			user: process.env.MYSQL_USER,
 			password: process.env.MYSQL_PASSWORD,
 			database: process.env.MYSQL_DB
-		});
+		};
+		let mysql = new Database(config);
 		app.mysql = mysql;
 		console.log('loaded MySQL...');
 	}
@@ -154,9 +155,15 @@ async function startApp() {
 		port = (process.env.REDIS_PORT || 6379),
 		auth = (process.env.REDIS_AUTH || null)
 	) => {
-		const client = require('async-redis').createClient(port, host);
-		if (auth) client.auth(auth);
-		console.log('Connected to Redis...', host, port, (auth ? 'with auth' : ''));
+		let client;
+		if (process.env.REDIS_CONNECTION_URL) {
+			client = require('async-redis').createClient(process.env.REDIS_CONNECTION_URL);
+			console.log('Connected to Redis...', process.env.REDIS_CONNECTION_URL);
+		} else {
+			client = require('async-redis').createClient(port, host);
+			if (auth) client.auth(auth);
+			console.log('Connected to Redis...', host, port, (auth ? 'with auth' : ''));
+		}
 		return client;
 	}
 
