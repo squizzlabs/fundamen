@@ -136,7 +136,17 @@ async function runTasks(app, tasks) {
 }
 
 async function runTask(task, f, app, curKey, runKey, iteration) {
+	let debugEnabled = false;
 	try {
+		debugEnabled = await app.redis.get('fundamen_debug') == 'true';
+	} catch (e) {
+		// If Redis debug flag cannot be read, continue without debug announcements.
+	}
+
+	try {
+		if (debugEnabled) {
+			console.log('Starting ' + task + ' iteration ' + iteration);
+		}
 		await f(app, iteration);
 	} catch (e) {
 		console.log(task + ' failure:');
@@ -144,6 +154,9 @@ async function runTask(task, f, app, curKey, runKey, iteration) {
 		await app.redis.del(curKey);
 		await app.redis.del(runKey);
 	} finally {
+		if (debugEnabled) {
+			console.log('Finished ' + task + ' iteration ' + iteration);
+		}
 		await app.redis.del(runKey);
 		if (app.bailout == true) await app.redis.del(curKey); // Bailed, probably didn't get to finish
 	}
