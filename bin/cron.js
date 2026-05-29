@@ -6,7 +6,7 @@ let outer_app;
 module.exports = init;
 
 let initialized = false;
-function init(app, options = {}) {
+async function init(app, options = {}) {
 	outer_app = app;
 	if (process.env.WATCH_FILES_CRON) {
 		app.watch(process.env.WATCH_FILES_CRON, restart);
@@ -16,7 +16,8 @@ function init(app, options = {}) {
 
 	if (typeof options.cron == 'string') {
 		let task = require(process.env.BASEPATH + '/cron/' + options.cron);
-		task.exec(app);
+		await task.exec(app);
+		process.exit(0);
 	}
 	else if (initialized == false) {
 		initialized = true;
