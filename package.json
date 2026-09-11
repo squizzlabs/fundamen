@@ -1,10 +1,10 @@
 {
   "name": "fundamen",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "license": "MIT",
   "dependencies": {
     "async-redis": "^2.0.0",
-    "body-parser": "^1.20.6",
+    "body-parser": "^1.20.8",
     "connect-redis": "^7.1.*",
     "cors": "^2.8.6",
     "dotenv": "^16.4.*",
@@ -20,6 +20,9 @@
     "pug": "^3.0.4",
     "utf8": "^3.0.*",
     "websocket": "^1.0.*"
+  },
+  "overrides": {
+    "qs": "6.16.0"
   },
   "main": "app.js",
   "repository": {
